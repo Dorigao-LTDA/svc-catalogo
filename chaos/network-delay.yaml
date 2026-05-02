@@ -1,0 +1,23 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: catalogo-network-delay
+  namespace: app
+  labels:
+    app.kubernetes.io/name: catalogo
+    chaos-test: "true"
+spec:
+  action: delay
+  mode: all
+  selector:
+    namespaces:
+      - app
+    labelSelectors:
+      app: catalogo
+  delay:
+    latency: "100ms"
+    correlation: "0.5"
+    jitter: "20ms"
+  duration: "120s"
+  scheduler:
+    cron: "@every 10m"
