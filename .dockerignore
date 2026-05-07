@@ -1,4 +1,12 @@
-node_modules/
-dist/
-*.class
 target/
+.git/
+.github/
+.idea/
+*.iml
+.env
+.env.local
+README.md
+nfr.yaml
+perf/
+chaos/
+deploy/

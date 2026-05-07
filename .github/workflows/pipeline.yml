@@ -164,7 +164,7 @@ jobs:
       - name: Run k6 Smoke
         uses: grafana/k6-action@v0.3
         with:
-          filename: k6/smoke.js
+          filename: perf/smoke.js
           flags: --out json=smoke-results.json
 
       - name: Upload Smoke Results
@@ -192,14 +192,14 @@ jobs:
       - name: Run k6 Baseline
         uses: grafana/k6-action@v0.3
         with:
-          filename: k6/baseline.js
+          filename: perf/baseline.js
           flags: --out json=baseline-results.json --tag test_type=baseline
 
       - name: Run k6 Stress
         uses: grafana/k6-action@v0.3
         continue-on-error: true
         with:
-          filename: k6/stress.js
+          filename: perf/stress.js
           flags: --out json=stress-results.json --tag test_type=stress
 
       - name: Upload Performance Results
@@ -252,7 +252,7 @@ jobs:
         uses: grafana/k6-action@v0.3
         continue-on-error: true
         with:
-          filename: k6/smoke.js
+          filename: perf/smoke.js
           flags: --out json=chaos-results.json
 
       - name: Cleanup Chaos
