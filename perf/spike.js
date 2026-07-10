@@ -1,4 +1,5 @@
 // Spike test — pico repentino de tráfego
+// Scenario stages and thresholds from __ENV (nfr.yaml via nfr-to-env.py)
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Rate } from 'k6/metrics';
@@ -6,21 +7,29 @@ import { Rate } from 'k6/metrics';
 const BASE_URL = __ENV.BASE_URL || 'http://catalogo.app.svc.cluster.local:8080';
 const catalogoErrors = new Rate('catalogo_errors');
 
+function parseStages(envStr) {
+  if (!envStr) return [
+    { duration: '1m', target: 10 },
+    { duration: '30s', target: 200 },
+    { duration: '2m', target: 200 },
+    { duration: '1m30s', target: 10 },
+  ];
+  try { return JSON.parse(envStr); } catch { return []; }
+}
+
+const THRESHOLD_FAILED = parseFloat(__ENV.K6_SPIKE_THRESHOLD_HTTP_REQ_FAILED || 0.10);
+const THRESHOLD_P99 = parseInt(__ENV.K6_SPIKE_THRESHOLD_P99 || 3000);
+
 export const options = {
   thresholds: {
-    http_req_failed: ['rate<0.10'],
-    http_req_duration: ['p(99)<3000'],
+    http_req_failed: [`rate<${THRESHOLD_FAILED}`],
+    http_req_duration: [`p(99)<${THRESHOLD_P99}`],
   },
   scenarios: {
     spike: {
       executor: 'ramping-vus',
       startVUs: 1,
-      stages: [
-        { duration: '1m', target: 10 },
-        { duration: '30s', target: 200 },
-        { duration: '2m', target: 200 },
-        { duration: '1m30s', target: 10 },
-      ],
+      stages: parseStages(__ENV.K6_SPIKE_STAGES),
       gracefulStop: '30s',
     },
   },

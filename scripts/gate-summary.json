@@ -1,0 +1,14 @@
+{
+  "service": "catalogo",
+  "status": "PASSED",
+  "gates": [
+    {
+      "gate": "baseline",
+      "metric": "present",
+      "actual": "missing",
+      "threshold": "present",
+      "status": "SKIP",
+      "severity": "warning"
+    }
+  ]
+}

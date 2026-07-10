@@ -1,4 +1,5 @@
 // Baseline test — carga constante para medir performance baseline
+// Thresholds and scenario params from __ENV (nfr.yaml via nfr-to-env.py)
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Trend, Rate } from 'k6/metrics';
@@ -11,25 +12,32 @@ const catalogoGetDuration = new Trend('catalogo_get_duration');
 const catalogoCreateDuration = new Trend('catalogo_create_duration');
 const catalogoErrors = new Rate('catalogo_errors');
 
-// IDs capturados para operações de GET
-let productIds = [];
+// Thresholds from nfr.yaml (via pre-processor)
+const ERR_RATE = parseFloat(__ENV.K6_BASELINE_THRESHOLD_HTTP_REQ_FAILED || 0.01);
+const P95_THRESH = parseInt(__ENV.K6_BASELINE_THRESHOLD_P95 || 300);
+const P99_THRESH = parseInt(__ENV.K6_BASELINE_THRESHOLD_P99 || 800);
+const THROUGHPUT_MIN = parseInt(__ENV.K6_BASELINE_THRESHOLD_THROUGHPUT || 50);
+const BIZ_ERR_RATE = parseFloat(__ENV.K6_BASELINE_THRESHOLD_BUSINESS_ERRORS || 0.05);
 
 export const options = {
   thresholds: {
-    http_req_failed: ['rate<0.01'],
-    http_req_duration: ['p(95)<300', 'p(99)<800'],
-    http_reqs: ['rate>=50'],
-    catalogo_errors: ['rate<0.05'],
+    http_req_failed: [`rate<${ERR_RATE}`],
+    http_req_duration: [`p(95)<${P95_THRESH}`, `p(99)<${P99_THRESH}`],
+    http_reqs: [`rate>=${THROUGHPUT_MIN}`],
+    catalogo_errors: [`rate<${BIZ_ERR_RATE}`],
   },
   scenarios: {
     baseline: {
       executor: 'constant-vus',
-      vus: __ENV.VUS ? parseInt(__ENV.VUS) : 10,
-      duration: __ENV.DURATION || '5m',
+      vus: __ENV.K6_BASELINE_VUS ? parseInt(__ENV.K6_BASELINE_VUS) : 10,
+      duration: __ENV.K6_BASELINE_DURATION || '5m',
       gracefulStop: '30s',
     },
   },
 };
+
+// IDs capturados para operações de GET
+let productIds = [];
 
 export default function () {
   const r = Math.random();
@@ -57,7 +65,6 @@ export default function () {
         'GET id 200 or 404': (r2) => r2.status === 200 || r2.status === 404,
       }) || catalogoErrors.add(1);
     } else {
-      // Fallback para list se ainda não houver IDs
       const listRes = http.get(`${BASE_URL}/api/catalogo`, { tags: { operation: 'list' } });
       catalogoListDuration.add(listRes.timings.duration);
       check(listRes, { 'GET list fallback 200': (r2) => r2.status === 200 }) || catalogoErrors.add(1);
