@@ -11,6 +11,10 @@ on:
         description: 'Executar testes de performance?'
         type: boolean
         default: true
+      run_stress_spike_tests:
+        description: 'Executar testes de stress e spike?'
+        type: boolean
+        default: false
       run_chaos_tests:
         description: 'Executar testes de resiliência?'
         type: boolean
@@ -259,7 +263,6 @@ jobs:
     name: Performance Test (k6)
     needs: deploy
     runs-on: ubuntu-latest
-    if: ${{ inputs.run_perf_tests != false }}
     steps:
       - uses: actions/checkout@v4
 
@@ -316,6 +319,7 @@ jobs:
             grafana/k6 run perf/baseline.js --out json=baseline-results.json --tag test_type=baseline
 
       - name: Run k6 Stress
+        if: ${{ inputs.run_stress_spike_tests == true }}
         continue-on-error: true
         env:
           BASE_URL: http://localhost:8080
@@ -329,6 +333,21 @@ jobs:
             $(env | grep '^K6_' | sed 's/^/-e /') \
             grafana/k6 run perf/stress.js --out json=stress-results.json --tag test_type=stress
 
+      - name: Run k6 Spike
+        if: ${{ inputs.run_stress_spike_tests == true }}
+        continue-on-error: true
+        env:
+          BASE_URL: http://localhost:8080
+        run: |
+          set -a; source nfr-env.sh; set +a
+          docker run --rm --network host \
+            --user "$(id -u):$(id -g)" \
+            -v ${{ github.workspace }}:/workspace \
+            -w /workspace \
+            -e BASE_URL \
+            $(env | grep '^K6_' | sed 's/^/-e /') \
+            grafana/k6 run perf/spike.js --out json=spike-results.json --tag test_type=spike
+
       - name: Upload Performance Results
         uses: actions/upload-artifact@v4
         with:
@@ -336,6 +355,7 @@ jobs:
           path: |
             baseline-results.json
             stress-results.json
+            spike-results.json
 
   # =============================================
   # Stage 6: Resilience Test
