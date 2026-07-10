@@ -242,12 +242,13 @@ jobs:
           BASE_URL: http://localhost:8080
         run: |
           set -a; source nfr-env.sh; set +a
+          env | grep '^K6_' > /tmp/k6-env.txt
           docker run --rm --network host \
             --user "$(id -u):$(id -g)" \
             -v ${{ github.workspace }}:/workspace \
             -w /workspace \
             -e BASE_URL \
-            $(env | grep '^K6_' | sed 's/^/-e /') \
+            --env-file /tmp/k6-env.txt \
             grafana/k6 run perf/smoke.js --out json=smoke-results.json
 
       - name: Upload Smoke Results
@@ -261,7 +262,7 @@ jobs:
   # =============================================
   performance-test:
     name: Performance Test (k6)
-    needs: deploy
+    needs: [deploy, smoke-test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -310,12 +311,13 @@ jobs:
           BASE_URL: http://localhost:8080
         run: |
           set -a; source nfr-env.sh; set +a
+          env | grep '^K6_' > /tmp/k6-env.txt
           docker run --rm --network host \
             --user "$(id -u):$(id -g)" \
             -v ${{ github.workspace }}:/workspace \
             -w /workspace \
             -e BASE_URL \
-            $(env | grep '^K6_' | sed 's/^/-e /') \
+            --env-file /tmp/k6-env.txt \
             grafana/k6 run perf/baseline.js --out json=baseline-results.json --tag test_type=baseline
 
       - name: Run k6 Stress
@@ -325,12 +327,13 @@ jobs:
           BASE_URL: http://localhost:8080
         run: |
           set -a; source nfr-env.sh; set +a
+          env | grep '^K6_' > /tmp/k6-env.txt
           docker run --rm --network host \
             --user "$(id -u):$(id -g)" \
             -v ${{ github.workspace }}:/workspace \
             -w /workspace \
             -e BASE_URL \
-            $(env | grep '^K6_' | sed 's/^/-e /') \
+            --env-file /tmp/k6-env.txt \
             grafana/k6 run perf/stress.js --out json=stress-results.json --tag test_type=stress
 
       - name: Run k6 Spike
@@ -340,12 +343,13 @@ jobs:
           BASE_URL: http://localhost:8080
         run: |
           set -a; source nfr-env.sh; set +a
+          env | grep '^K6_' > /tmp/k6-env.txt
           docker run --rm --network host \
             --user "$(id -u):$(id -g)" \
             -v ${{ github.workspace }}:/workspace \
             -w /workspace \
             -e BASE_URL \
-            $(env | grep '^K6_' | sed 's/^/-e /') \
+            --env-file /tmp/k6-env.txt \
             grafana/k6 run perf/spike.js --out json=spike-results.json --tag test_type=spike
 
       - name: Upload Performance Results
@@ -362,7 +366,7 @@ jobs:
   # =============================================
   resilience-test:
     name: Resilience Test (Chaos)
-    needs: deploy
+    needs: [deploy, smoke-test, performance-test]
     runs-on: ubuntu-latest
     if: ${{ inputs.run_chaos_tests == true }}
     steps:
@@ -440,12 +444,13 @@ jobs:
           BASE_URL: http://localhost:8080
         run: |
           set -a; source nfr-env.sh; set +a
+          env | grep '^K6_' > /tmp/k6-env.txt
           docker run --rm --network host \
             --user "$(id -u):$(id -g)" \
             -v ${{ github.workspace }}:/workspace \
             -w /workspace \
             -e BASE_URL \
-            $(env | grep '^K6_' | sed 's/^/-e /') \
+            --env-file /tmp/k6-env.txt \
             grafana/k6 run perf/smoke.js --out json=chaos-results.json
 
       - name: Cleanup Chaos
