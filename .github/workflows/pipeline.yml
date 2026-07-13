@@ -235,14 +235,14 @@ jobs:
           exit 1
 
       - name: Generate k6 env from NFR
-        run: python3 /tmp/ct-common/scripts/nfr-to-env.py --nfr nfr.yaml --output nfr-env.sh --service ${{ env.SERVICE_NAME }}
+        run: |
+          python3 /tmp/ct-common/scripts/nfr-to-env.py --nfr nfr.yaml --output nfr-env.sh --service ${{ env.SERVICE_NAME }}
+          sed 's/^export //' nfr-env.sh > /tmp/k6-env.txt
 
       - name: Run k6 Smoke
         env:
           BASE_URL: http://localhost:8080
         run: |
-          set -a; source nfr-env.sh; set +a
-          env | grep '^K6_' > /tmp/k6-env.txt
           docker run --rm --network host \
             --user "$(id -u):$(id -g)" \
             -v ${{ github.workspace }}:/workspace \
@@ -304,14 +304,14 @@ jobs:
           exit 1
 
       - name: Generate k6 env from NFR
-        run: python3 /tmp/ct-common/scripts/nfr-to-env.py --nfr nfr.yaml --output nfr-env.sh --service ${{ env.SERVICE_NAME }}
+        run: |
+          python3 /tmp/ct-common/scripts/nfr-to-env.py --nfr nfr.yaml --output nfr-env.sh --service ${{ env.SERVICE_NAME }}
+          sed 's/^export //' nfr-env.sh > /tmp/k6-env.txt
 
       - name: Run k6 Baseline
         env:
           BASE_URL: http://localhost:8080
         run: |
-          set -a; source nfr-env.sh; set +a
-          env | grep '^K6_' > /tmp/k6-env.txt
           docker run --rm --network host \
             --user "$(id -u):$(id -g)" \
             -v ${{ github.workspace }}:/workspace \
@@ -326,8 +326,6 @@ jobs:
         env:
           BASE_URL: http://localhost:8080
         run: |
-          set -a; source nfr-env.sh; set +a
-          env | grep '^K6_' > /tmp/k6-env.txt
           docker run --rm --network host \
             --user "$(id -u):$(id -g)" \
             -v ${{ github.workspace }}:/workspace \
@@ -342,8 +340,6 @@ jobs:
         env:
           BASE_URL: http://localhost:8080
         run: |
-          set -a; source nfr-env.sh; set +a
-          env | grep '^K6_' > /tmp/k6-env.txt
           docker run --rm --network host \
             --user "$(id -u):$(id -g)" \
             -v ${{ github.workspace }}:/workspace \
@@ -395,7 +391,9 @@ jobs:
           cluster-name: ${{ secrets.AKS_CLUSTER_NAME }}
 
       - name: Generate k6 env from NFR
-        run: python3 /tmp/ct-common/scripts/nfr-to-env.py --nfr nfr.yaml --output nfr-env.sh --service ${{ env.SERVICE_NAME }}
+        run: |
+          python3 /tmp/ct-common/scripts/nfr-to-env.py --nfr nfr.yaml --output nfr-env.sh --service ${{ env.SERVICE_NAME }}
+          sed 's/^export //' nfr-env.sh > /tmp/k6-env.txt
 
       - name: Apply Pod Kill and Measure Recovery
         run: |
@@ -443,8 +441,6 @@ jobs:
         env:
           BASE_URL: http://localhost:8080
         run: |
-          set -a; source nfr-env.sh; set +a
-          env | grep '^K6_' > /tmp/k6-env.txt
           docker run --rm --network host \
             --user "$(id -u):$(id -g)" \
             -v ${{ github.workspace }}:/workspace \
