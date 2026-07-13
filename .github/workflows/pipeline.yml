@@ -1,4 +1,4 @@
-name: ci-cd-catalogo
+name: CI/CD Pipeline
 on:
   push:
     branches: [main]
