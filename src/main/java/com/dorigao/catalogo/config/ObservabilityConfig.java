@@ -23,7 +23,8 @@ public class ObservabilityConfig {
         return MeterFilter.commonTags(
                 Tags.of("application", "catalogo",
                         "service.name", "catalogo",
-                        "service.namespace", "app")
+                        "service.namespace", "app",
+                        "service_name", "catalogo")
         );
     }
 }
