@@ -23,6 +23,12 @@ public class CatalogoService {
 
     public List<Produto> listarTodos() {
         log.debug("Listando todos os produtos");
+        // simula latência de consulta ao banco de dados
+        try {
+            Thread.sleep(400);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
         return new ArrayList<>(produtos.values());
     }
 
