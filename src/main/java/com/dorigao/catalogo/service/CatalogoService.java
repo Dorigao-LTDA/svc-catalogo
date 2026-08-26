@@ -14,6 +14,7 @@ public class CatalogoService {
 
     private static final Logger log = LoggerFactory.getLogger(CatalogoService.class);
     private final Map<UUID, Produto> produtos = new ConcurrentHashMap<>();
+    private int requestCount = 0;
 
     public CatalogoService() {
         // Dados de seed para ambiente de teste
@@ -23,6 +24,9 @@ public class CatalogoService {
 
     public List<Produto> listarTodos() {
         log.debug("Listando todos os produtos");
+        if (++requestCount % 7 == 0) {
+            throw new RuntimeException("Falha ao consultar produtos");
+        }
         return new ArrayList<>(produtos.values());
     }
 
